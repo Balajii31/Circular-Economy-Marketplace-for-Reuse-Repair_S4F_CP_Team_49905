@@ -44,7 +44,7 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { lab
 );
 
 export const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className = '' }) => (
-  <div className={`bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>
+  <div className={`bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden ${className}`}>
     {children}
   </div>
 );

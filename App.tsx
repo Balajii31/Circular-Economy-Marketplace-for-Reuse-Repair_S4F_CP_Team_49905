@@ -9,6 +9,8 @@ import Marketplace from './views/Marketplace';
 import RepairNetwork from './views/RepairNetwork';
 import DonationNetwork from './views/DonationNetwork';
 import Challenges from './views/Challenges';
+import About from './views/About';
+import Settings from './views/Settings';
 import Auth from './views/Auth';
 import { authService } from './lib/auth';
 
@@ -55,6 +57,10 @@ const App: React.FC = () => {
         return <History />;
       case 'analytics':
         return <Analytics />;
+      case 'about':
+        return <About />;
+      case 'settings':
+        return <Settings />;
       default:
         return <Dashboard />;
     }

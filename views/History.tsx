@@ -32,6 +32,42 @@ const History = () => {
     }
   };
 
+  const handleExportCSV = () => {
+    if (products.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const headers = ['Name', 'Type', 'Status', 'Created Date', 'Action', 'Carbon Saved (kg)', 'Reward Points'];
+    const csvData = products.map(p => {
+      const bestRec = p.recommendations?.[0];
+      return [
+        p.name,
+        p.type,
+        p.status,
+        new Date(p.createdAt).toLocaleDateString(),
+        bestRec?.action || 'N/A',
+        bestRec?.carbonSaved || 0,
+        bestRec?.rewardPoints || 0
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `ecoloop-history-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.type.toLowerCase().includes(searchQuery.toLowerCase())
@@ -64,7 +100,10 @@ const History = () => {
           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
             <Filter size={16} /> Filter
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors">
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
             <Download size={16} /> Export CSV
           </button>
         </div>

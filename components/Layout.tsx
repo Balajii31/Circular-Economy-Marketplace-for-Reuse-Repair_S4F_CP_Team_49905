@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  PlusCircle, 
-  History, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  PlusCircle,
+  History,
+  BarChart3,
+  Settings,
   LogOut,
   Leaf,
   Menu,
@@ -13,7 +13,8 @@ import {
   ShoppingBag,
   Wrench,
   Heart,
-  Trophy
+  Trophy,
+  Info
 } from 'lucide-react';
 import { authService } from '../lib/auth';
 
@@ -41,12 +42,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView }) 
     { id: 'challenges', label: 'Challenges', icon: Trophy },
     { id: 'history', label: 'Activity History', icon: History },
     { id: 'analytics', label: 'Impact Analytics', icon: BarChart3 },
+    { id: 'about', label: 'About', icon: Info },
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200">
+      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
         <div className="p-6 flex items-center gap-3">
           <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
             <Leaf size={24} />
@@ -60,9 +62,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView }) 
               key={item.id}
               onClick={() => setActiveView(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                activeView === item.id 
-                  ? 'bg-emerald-50 text-emerald-700' 
-                  : 'text-slate-600 hover:bg-slate-100'
+                activeView === item.id
+                  ? 'bg-emerald-50 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
             >
               <item.icon size={20} />
@@ -72,7 +74,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView }) 
         </nav>
 
         <div className="p-4 border-t border-slate-200">
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('changeView', { detail: 'settings' }))}
+            className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
+          >
             <Settings size={20} />
             Settings
           </button>
@@ -88,8 +93,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView }) 
 
       {/* Mobile Menu */}
       <div className={`fixed inset-0 z-50 md:hidden bg-black/50 transition-opacity ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMobileMenuOpen(false)}>
-        <aside 
-          className={`absolute left-0 top-0 bottom-0 w-64 bg-white transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        <aside
+          className={`absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-800 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="p-6 flex items-center justify-between border-b">
@@ -123,12 +128,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView }) 
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 flex-shrink-0">
+        <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 md:px-8 flex-shrink-0">
           <div className="flex items-center gap-4">
             <button className="md:hidden p-2 text-slate-500" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu size={24} />
             </button>
-            <h1 className="text-lg font-semibold text-slate-800 capitalize">
+            <h1 className="text-lg font-semibold text-slate-800 dark:text-white capitalize">
               {navItems.find(i => i.id === activeView)?.label || activeView.replace('-', ' ')}
             </h1>
           </div>
