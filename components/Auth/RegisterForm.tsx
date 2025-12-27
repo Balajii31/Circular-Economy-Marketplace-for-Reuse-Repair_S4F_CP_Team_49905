@@ -21,7 +21,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onToggle }) => {
     setError('');
     try {
       const user = await authService.register(name, email, password);
-      authService.setToken(user);
+      authService.setUser(user);
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Registration failed');

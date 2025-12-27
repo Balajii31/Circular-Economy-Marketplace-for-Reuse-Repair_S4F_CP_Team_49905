@@ -94,8 +94,8 @@ const Marketplace = () => {
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-xl font-bold text-slate-900">${item.price}</span>
-                <span className="text-sm text-slate-400 line-through">${item.originalPrice}</span>
+                <span className="text-xl font-bold text-slate-900">₹{item.price}</span>
+                <span className="text-sm text-slate-400 line-through">₹{item.originalPrice}</span>
               </div>
               <button className="w-full bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-700 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
                 <ShoppingCart size={18} /> Add to Cart

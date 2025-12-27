@@ -2,62 +2,101 @@
 import { Product, UserStats, Recommendation, ProductType, ProductCondition, NGO, Challenge, MarketplaceItem } from '../types';
 import { mlService } from './geminiService';
 import { authService } from '../lib/auth';
-
-const PRODUCTS_KEY = 'ecoloop_products';
-
-const getStoredProducts = (): Product[] => {
-  const data = localStorage.getItem(PRODUCTS_KEY);
-  return data ? JSON.parse(data) : [];
-};
-
-const saveStoredProducts = (products: Product[]) => {
-  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
-};
+import { sql } from '../lib/db';
 
 export const api = {
   products: {
     getAll: async (): Promise<Product[]> => {
       const user = authService.getUser();
       if (!user) return [];
-      return getStoredProducts().filter(p => p.userId === user.id);
+      const products = await sql`SELECT * FROM products WHERE user_id = ${user.id}`;
+      return products.map(p => ({
+        id: p.id.toString(),
+        userId: p.user_id.toString(),
+        name: p.name,
+        type: p.type as ProductType,
+        description: p.description,
+        condition: p.condition as ProductCondition,
+        age: p.age,
+        marketValue: p.market_value,
+        status: p.status,
+        createdAt: p.created_at.toISOString(),
+      }));
     },
     getById: async (id: string): Promise<Product | null> => {
-      const products = getStoredProducts();
-      return products.find(p => p.id === id) || null;
+      const products = await sql`SELECT * FROM products WHERE id = ${parseInt(id)}`;
+      if (products.length === 0) return null;
+      const p = products[0];
+      return {
+        id: p.id.toString(),
+        userId: p.user_id.toString(),
+        name: p.name,
+        type: p.type as ProductType,
+        description: p.description,
+        condition: p.condition as ProductCondition,
+        age: p.age,
+        marketValue: p.market_value,
+        status: p.status,
+        createdAt: p.created_at.toISOString(),
+      };
     },
     create: async (data: Partial<Product>): Promise<Product> => {
       const user = authService.getUser();
       if (!user) throw new Error("Unauthorized");
-      const newProduct: Product = {
-        id: Math.random().toString(36).substr(2, 9),
-        userId: user.id,
-        name: data.name || 'Unknown Item',
-        type: data.type || ProductType.ELECTRONICS,
-        description: data.description || '',
-        condition: data.condition || ProductCondition.GOOD,
-        age: data.age || '1-2 years',
-        marketValue: data.marketValue || 0,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        ...data
+      const newProduct = await sql`
+        INSERT INTO products (user_id, type, name, description, condition, age, market_value, status)
+        VALUES (${parseInt(user.id)}, ${data.type || ProductType.ELECTRONICS}, ${data.name || 'Unknown Item'}, ${data.description || ''}, ${data.condition || ProductCondition.GOOD}, ${data.age || '1-2 years'}, ${data.marketValue || 0}, 'pending')
+        RETURNING *
+      `;
+      const p = newProduct[0];
+      return {
+        id: p.id.toString(),
+        userId: p.user_id.toString(),
+        name: p.name,
+        type: p.type as ProductType,
+        description: p.description,
+        condition: p.condition as ProductCondition,
+        age: p.age,
+        marketValue: p.market_value,
+        status: p.status,
+        createdAt: p.created_at.toISOString(),
       };
-      const products = getStoredProducts();
-      products.unshift(newProduct);
-      saveStoredProducts(products);
-      return newProduct;
     },
     update: async (id: string, data: Partial<Product>): Promise<Product> => {
-      const products = getStoredProducts();
-      const index = products.findIndex(p => p.id === id);
-      if (index === -1) throw new Error("Product not found");
-      products[index] = { ...products[index], ...data };
-      saveStoredProducts(products);
-      return products[index];
+      const user = authService.getUser();
+      if (!user) throw new Error("Unauthorized");
+      // For simplicity, update all fields
+      const updated = await sql`
+        UPDATE products SET
+          type = COALESCE(${data.type}, type),
+          name = COALESCE(${data.name}, name),
+          description = COALESCE(${data.description}, description),
+          condition = COALESCE(${data.condition}, condition),
+          age = COALESCE(${data.age}, age),
+          market_value = COALESCE(${data.marketValue}, market_value),
+          status = COALESCE(${data.status}, status)
+        WHERE id = ${parseInt(id)} AND user_id = ${parseInt(user.id)}
+        RETURNING *
+      `;
+      if (updated.length === 0) throw new Error("Product not found");
+      const p = updated[0];
+      return {
+        id: p.id.toString(),
+        userId: p.user_id.toString(),
+        name: p.name,
+        type: p.type as ProductType,
+        description: p.description,
+        condition: p.condition as ProductCondition,
+        age: p.age,
+        marketValue: p.market_value,
+        status: p.status,
+        createdAt: p.created_at.toISOString(),
+      };
     },
     delete: async (id: string): Promise<void> => {
-      const products = getStoredProducts();
-      const filtered = products.filter(p => p.id !== id);
-      saveStoredProducts(filtered);
+      const user = authService.getUser();
+      if (!user) throw new Error("Unauthorized");
+      await sql`DELETE FROM products WHERE id = ${parseInt(id)} AND user_id = ${parseInt(user.id)}`;
     }
   },
   ml: {

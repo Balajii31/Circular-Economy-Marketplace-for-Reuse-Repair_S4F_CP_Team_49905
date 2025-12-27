@@ -1,86 +1,37 @@
-
-import { User } from '../types';
-
-const STORAGE_KEY = 'ecoloop_session';
-const USERS_KEY = 'ecoloop_users';
-
-// Pre-seed a test user for convenience
-const seedTestUser = () => {
-  const usersRaw = localStorage.getItem(USERS_KEY);
-  if (!usersRaw) {
-    const testUser = {
-      id: 'test-user-001',
-      name: 'Alex Eco',
-      email: 'test@ecoloop.com',
-      password: 'password123',
-      role: 'consumer'
-    };
-    localStorage.setItem(USERS_KEY, JSON.stringify([testUser]));
-  }
-};
-
-// Execute seed on module load
-seedTestUser();
+// lib/auth.ts  
+import { sql } from './db';
+import { hash, compare } from 'bcryptjs';
 
 export const authService = {
-  // Simulate JWT generation/validation
-  getToken: () => localStorage.getItem(STORAGE_KEY),
-  
-  setToken: (user: User) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  async register(name: string, email: string, password: string) {
+    const hashedPassword = await hash(password, 12);
+    const newUser = await sql`
+      INSERT INTO users (name, email, password)
+      VALUES (${name}, ${email}, ${hashedPassword})
+      RETURNING id, name, email
+    `;
+    const user = { id: newUser[0].id, name: newUser[0].name, email: newUser[0].email };
+    authService.setUser(user);
+    return user;
   },
-
-  logout: () => {
-    localStorage.removeItem(STORAGE_KEY);
+  async login(email: string, password: string) {
+    const users = await sql`SELECT * FROM users WHERE email = ${email}`;
+    if (users.length === 0) throw new Error('User not found');
+    const user = users[0];
+    const isValid = await compare(password, user.password);
+    if (!isValid) throw new Error('Invalid password');
+    const userObj = { id: user.id, name: user.name, email: user.email };
+    authService.setUser(userObj);
+    return userObj;
   },
-
-  getUser: (): User | null => {
-    const data = localStorage.getItem(STORAGE_KEY);
+  getUser() {
+    const data = localStorage.getItem('user');
     return data ? JSON.parse(data) : null;
   },
-
-  // Mock Register
-  register: async (name: string, email: string, password: string): Promise<User> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const usersRaw = localStorage.getItem(USERS_KEY);
-        const users = usersRaw ? JSON.parse(usersRaw) : [];
-        
-        if (users.find((u: any) => u.email === email)) {
-          reject(new Error('Email already registered'));
-          return;
-        }
-
-        const newUser: User = {
-          id: Math.random().toString(36).substr(2, 9),
-          name,
-          email,
-          role: 'consumer'
-        };
-
-        users.push({ ...newUser, password }); // In real apps, password would be hashed
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        resolve(newUser);
-      }, 800);
-    });
+  setUser(user: any) {
+    localStorage.setItem('user', JSON.stringify(user));
   },
-
-  // Mock Login
-  login: async (email: string, password: string): Promise<User> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const usersRaw = localStorage.getItem(USERS_KEY);
-        const users = usersRaw ? JSON.parse(usersRaw) : [];
-        
-        const user = users.find((u: any) => u.email === email && u.password === password);
-        
-        if (user) {
-          const { password, ...userData } = user;
-          resolve(userData);
-        } else {
-          reject(new Error('Invalid credentials. Try test@ecoloop.com / password123'));
-        }
-      }, 800);
-    });
+  logout() {
+    localStorage.removeItem('user');
   }
 };

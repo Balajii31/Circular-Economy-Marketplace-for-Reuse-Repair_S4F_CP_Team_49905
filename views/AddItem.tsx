@@ -243,10 +243,10 @@ const AddItem = () => {
                     <option value={ProductCondition.DAMAGED}>Needs Professional Repair</option>
                   </select>
                 </div>
-                <Input 
-                  label="Est. Value ($)" 
-                  type="number" 
-                  placeholder="0.00" 
+                <Input
+                  label="Est. Value (₹)"
+                  type="number"
+                  placeholder="0.00"
                   value={formData.marketValue}
                   onChange={(e) => setFormData({...formData, marketValue: e.target.value})}
                 />

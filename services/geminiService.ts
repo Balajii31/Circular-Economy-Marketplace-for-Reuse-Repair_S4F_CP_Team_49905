@@ -14,7 +14,7 @@ export class GeminiMLService {
   private ai: GoogleGenAI;
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    this.ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
   }
 
   async analyzeProduct(product: Partial<Product>): Promise<Recommendation[]> {
@@ -30,7 +30,7 @@ export class GeminiMLService {
       - Category: ${category}
       - Condition: ${product.condition}
       - Age: ${product.age}
-      - Market Value: $${product.marketValue}
+      - Market Value: ₹{product.marketValue}
       - Description: ${product.description}
 
       Carbon Calculation Reference (kg CO2):
